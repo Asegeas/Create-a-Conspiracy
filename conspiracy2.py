@@ -1,34 +1,68 @@
-from rich.console import Console
-from rich.text import Text
 from openai import OpenAI
+from rich.console import Console
 console = Console()
 
+client = OpenAI(
+    # defaults to os.environ.get("OPENAI_API_KEY")
+    api_key="",
+)
 
-def generate(name, styl, poliaff, belif) -> str:
+
+def clean_output(option):
+    """Cleans up the chatgtp responses."""
+    return option.choices[0].message.content
+
+
+def generate(name: str = '', styl: str = '', poliaff: str = '', belif: str = 'the moon is cheese', org_pub: str = 'Posted on an The New York times website receiving 200000 views and 20000 likes'):
     """Generate output of the prompt."""
+    collection = []
+    prompts = [
+        f"{styl}, make a conspiracy theory called {name}, that has {poliaff} affiliation and beliefs including: {belif}",           # Please make a function to tell if the belifs are larger than 1 and then put and at the end to make look good
+    ]
+
+    messages = [
+                {
+
+                    "role": "system",
+                    "content": f"You are a helpful internet user that generates conspiracy theories based on the following prompt: {prompts}"
+                }
+                ]
     if len(belif) != 1:
         belif[-1] = f"and {belif[-1]}"
     option = 0 # edit for entered information
-    prompts = [
-        f"{styl}, make a conspiracy theory called {name}, that has {poliaff} affiliation and beliefs including: {belif}",           # Please make a function to tell if the belifs are larger than 1 and then put and at the end to make look good
-        f"Make a funny conspiracy theory."
-    ]
-    client = OpenAI(
-        # defaults to os.environ.get("OPENAI_API_KEY")
-
-        api_key="",  # put your API_key here
-    )
-
+    
     chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "assistant",
-                "content": f"You are a helpful internet user that generates conspiracy theories based on the following prompt: {prompts[option]}"
-            }
-        ],
+        messages=messages,
         model="gpt-4",
     )
-    return chat_completion
+    collection.append(chat_completion)
+    option += 1
+    saved_prompt_1 = chat_completion
+    prompt2 = [
+        f"Assess the reach of this content: ({clean_output(saved_prompt_1)}) that was made: ({styl}) with a {poliaff} affliation and {org_pub}."
+    ]
+    message2 = [
+
+                {
+                    "role": "system",
+                    "content": f"You are a an algorithm that assesses posts and articles for their reach online. Using your knowlege of online traffic: {prompt2}."
+                }
+                ]
+    chat_completion = client.chat.completions.create(
+    messages=message2,
+    model="gpt-4",
+    )
+    collection.append(chat_completion)
+    return collection
+
+
+def gen2rate(message: str = '', prompt: str = ''):
+    """Modified generate function to be do thing better."""
+    client
+    chat_completion = client.chat.completions.create(
+
+    )
+    pass
 
 
 def poli_aff() -> None:
@@ -76,7 +110,7 @@ def writing_ops() -> None:
     console.print("1. /pol 4-chan post")
     console.print("2. reddit post")
     console.print("3. news-article")
-    console.print("4. Bar-bathroom-wall")  # need a new one
+    console.print("4. Song")  # need a new one
     console.print("5. empirical-research")  # see what this one does
     console.print("6. APA-style")  # test this one
     console.print("7. Wikipedia-edit (Citation needed)")  # what does this do
@@ -95,7 +129,7 @@ def writing_style(wrt_stl: str = 'In the style of a news article'):
     if wrt_stl == '3':
         wrt_stl = 'In the style of a news article'
     if wrt_stl == '4':
-        wrt_stl = 'In the style of marker written on the wall of a bar bathroom'
+        wrt_stl = 'In the style of a low budget indie song'
     if wrt_stl == '5':
         wrt_stl = 'In the stle of empircical research'
     if wrt_stl == '6':
@@ -131,14 +165,24 @@ def main():
     styl = writing_style(styl)
     anotherone = True
     political_affiliation = affiliation_fmt(poli_afl=political_affiliation)
+    console.print()
+    console.print("Please specify the origin of the post (ex: 'Posted on Reddit recieving 200 upvotes and 20k views')")
+    org_pub = input()
+    if not org_pub:
+        org_pub = None
     while anotherone:
-        perspective.append(input(f"  Please enter a single belief of {name_of_c} conspiracy:    "))
+        perspective.append(input(f"  Please enter a single belief of your conspiracy:    "))
         choice = input("Would you like to add another belief y/n:    ")
         if choice == 'n':
             anotherone = False
     console.print(f"generating {name_of_c} as we speak please wait it may take several minutes....  ")
-    refine_output = generate(name=name_of_c, styl=styl, poliaff=political_affiliation, belif=perspective)
-    console.print(refine_output)
+    refine_output = generate(name=name_of_c, styl=styl, poliaff=political_affiliation, belif=perspective, org_pub=org_pub)
+    option1 = refine_output[0]
+    option2 = refine_output[1]
+    console.print(clean_output(option1))
+    console.print("------------------------------------------------------------------------------------------------------------------------------------------------------")
+    console.print(clean_output(option2))
+    # console.print(refine_output[0].choices[0].message.content)
     # console.print(refine_output["choices"][0]["text"])
 
 
